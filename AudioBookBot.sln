@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36401.2 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioBookBot", "AudioBookBot.csproj", "{E4754A1E-8938-7C9A-84BB-1C5CA6D2E36A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E4754A1E-8938-7C9A-84BB-1C5CA6D2E36A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4754A1E-8938-7C9A-84BB-1C5CA6D2E36A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4754A1E-8938-7C9A-84BB-1C5CA6D2E36A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4754A1E-8938-7C9A-84BB-1C5CA6D2E36A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {70F21D9E-D818-4F7F-955E-C17EF19EB0B3}
+	EndGlobalSection
+EndGlobal
