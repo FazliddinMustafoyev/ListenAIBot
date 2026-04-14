@@ -1,0 +1,1 @@
+worker: dotnet AudioBookBot.dll
