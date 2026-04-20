@@ -272,26 +272,79 @@ async Task HandleDocx(ITelegramBotClient botClient, long chatId, string docxPath
         "tr" => "🇹🇷 Türkçe",
         _ => "🇬🇧 English"
     };
+
+    // ✅ Matnni bo'laklarga ajrat (har biri ~5000 so'z)
+    var chunks = SplitTextIntoChunks(text, maxWords: 5000);
     var wordCount = text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
 
     await botClient.SendMessage(chatId,
-        $"🌐 Til: {langEmoji}\n📊 So'zlar: {wordCount:N0}\n⏳ Audio tayyorlanmoqda...",
+        $"🌐 Til: {langEmoji}\n" +
+        $"📊 So'zlar: {wordCount:N0}\n" +
+        $"🎵 Audio qismlar: {chunks.Count} ta\n\n" +
+        $"⏳ Ketma-ket yuborilmoqda...",
         cancellationToken: ct);
 
-    var oggPath = await piperService.TextToOgg(text, language, ct);
+    for (int i = 0; i < chunks.Count; i++)
+    {
+        ct.ThrowIfCancellationRequested();
 
-    ct.ThrowIfCancellationRequested();
+        await botClient.SendMessage(chatId,
+            $"🔄 Qism {i + 1}/{chunks.Count} tayyorlanmoqda...",
+            cancellationToken: ct);
 
-    await using var audioStream = System.IO.File.OpenRead(oggPath);
-    await botClient.SendVoice(
-        chatId: chatId,
-        voice: InputFile.FromStream(audioStream, "audiobook.ogg"),
-        caption: $"🎧 {fileName}",
+        var oggPath = await piperService.TextToOgg(chunks[i], language, ct);
+
+        ct.ThrowIfCancellationRequested();
+
+        await using var audioStream = System.IO.File.OpenRead(oggPath);
+        await botClient.SendVoice(
+            chatId: chatId,
+            voice: InputFile.FromStream(audioStream, $"part_{i + 1}.ogg"),
+            caption: $"🎧 {fileName} | Qism {i + 1}/{chunks.Count}",
+            cancellationToken: ct);
+
+        System.IO.File.Delete(oggPath);
+        await Task.Delay(300, ct);
+    }
+
+    await botClient.SendMessage(chatId,
+        $"✅ *{fileName}* to'liq audio qilindi!\n🎧 Jami {chunks.Count} ta audio yuborildi.",
+        parseMode: ParseMode.Markdown,
         cancellationToken: ct);
-
-    System.IO.File.Delete(oggPath);
 }
 
+// ✅ Yangi helper — so'z soni bo'yicha bo'lish, gap o'rtasida kesmasligi uchun
+static List<string> SplitTextIntoChunks(string text, int maxWords = 5000)
+{
+    var chunks = new List<string>();
+    // Gaplarni to'liq saqlash uchun gap chegarasida kesadi
+    var sentences = text.Split(
+        new[] { ". ", "! ", "? ", ".\n", "!\n", "?\n" },
+        StringSplitOptions.RemoveEmptyEntries);
+
+    var current = new System.Text.StringBuilder();
+    int currentWords = 0;
+
+    foreach (var sentence in sentences)
+    {
+        var sentenceWords = sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+
+        if (currentWords + sentenceWords > maxWords && current.Length > 0)
+        {
+            chunks.Add(current.ToString().Trim());
+            current.Clear();
+            currentWords = 0;
+        }
+
+        current.Append(sentence).Append(". ");
+        currentWords += sentenceWords;
+    }
+
+    if (current.Length > 0)
+        chunks.Add(current.ToString().Trim());
+
+    return chunks.Count > 0 ? chunks : [text];
+}
 Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
 {
     Console.WriteLine(exception switch

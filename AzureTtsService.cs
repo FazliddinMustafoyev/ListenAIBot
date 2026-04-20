@@ -8,5 +8,6 @@ namespace AudioBookBot
 {
     internal class AzureTtsService
     {
+        string s = "8626398460:AAFaHQAWTofFTL9RbqEcN28HwNZNbHKOwCc";
     }
 }

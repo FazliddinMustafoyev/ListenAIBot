@@ -1,94 +1,58 @@
+using System.Text;
+
 namespace AudioBookBot.Services;
 
-/// O'zbek kiril → lotin transliteratsiya
 public static class UzbekTransliterator
 {
-    private static readonly Dictionary<string, string> Map = new()
+    private static readonly Dictionary<char, string> Map = new()
     {
-        // Ko'p harfli (avval tekshiriladi)
-        {"шч", "shch"}, {"Шч", "Shch"},
-
-        // Maxsus o'zbek harflari
-        {"ў", "o'"},  {"Ў", "O'"},
-        {"қ", "q"},   {"Қ", "Q"},
-        {"ғ", "g'"},  {"Ғ", "G'"},
-        {"ҳ", "h"},   {"Ҳ", "H"},
-
-        // Oddiy kiril
-        {"а", "a"},  {"А", "A"},
-        {"б", "b"},  {"Б", "B"},
-        {"в", "v"},  {"В", "V"},
-        {"г", "g"},  {"Г", "G"},
-        {"д", "d"},  {"Д", "D"},
-        {"е", "e"},  {"Е", "E"},
-        {"ё", "yo"}, {"Ё", "Yo"},
-        {"ж", "j"},  {"Ж", "J"},
-        {"з", "z"},  {"З", "Z"},
-        {"и", "i"},  {"И", "I"},
-        {"й", "y"},  {"Й", "Y"},
-        {"к", "k"},  {"К", "K"},
-        {"л", "l"},  {"Л", "L"},
-        {"м", "m"},  {"М", "M"},
-        {"н", "n"},  {"Н", "N"},
-        {"о", "o"},  {"О", "O"},
-        {"п", "p"},  {"П", "P"},
-        {"р", "r"},  {"Р", "R"},
-        {"с", "s"},  {"С", "S"},
-        {"т", "t"},  {"Т", "T"},
-        {"у", "u"},  {"У", "U"},
-        {"ф", "f"},  {"Ф", "F"},
-        {"х", "x"},  {"Х", "X"},
-        {"ц", "ts"}, {"Ц", "Ts"},
-        {"ч", "ch"}, {"Ч", "Ch"},
-        {"ш", "sh"}, {"Ш", "Sh"},
-        {"ъ", ""},   {"Ъ", ""},
-        {"ы", "i"},  {"Ы", "I"},
-        {"ь", ""},   {"Ь", ""},
-        {"э", "e"},  {"Э", "E"},
-        {"ю", "yu"}, {"Ю", "Yu"},
-        {"я", "ya"}, {"Я", "Ya"},
-        {"ни", "ni"},
+        // Kichik harflar
+        {'а', "a"}, {'б', "b"}, {'в', "v"}, {'г', "g"}, {'д', "d"},
+        {'е', "e"}, {'ё', "yo"}, {'ж', "j"}, {'з', "z"}, {'и', "i"},
+        {'й', "y"}, {'к', "k"}, {'л', "l"}, {'м', "m"}, {'н', "n"},
+        {'о', "o"}, {'п', "p"}, {'р', "r"}, {'с', "s"}, {'т', "t"},
+        {'у', "u"}, {'ф', "f"}, {'х', "x"}, {'ц', "ts"}, {'ч', "ch"},
+        {'ш', "sh"}, {'щ', "sh"}, {'ъ', ""}, {'ы', "i"}, {'ь', ""},
+        {'э', "e"}, {'ю', "yu"}, {'я', "ya"},
+        
+        // O‘zbek maxsus harflari (APOSTROF EMAS, balki ‘ belgisi)
+        {'ў', "o‘"}, {'қ', "q"}, {'ғ', "g‘"}, {'ҳ', "h"},
+        
+        // Katta harflar
+        {'А', "A"}, {'Б', "B"}, {'В', "V"}, {'Г', "G"}, {'Д', "D"},
+        {'Е', "E"}, {'Ё', "Yo"}, {'Ж', "J"}, {'З', "Z"}, {'И', "I"},
+        {'Й', "Y"}, {'К', "K"}, {'Л', "L"}, {'М', "M"}, {'Н', "N"},
+        {'О', "O"}, {'П', "P"}, {'Р', "R"}, {'С', "S"}, {'Т', "T"},
+        {'У', "U"}, {'Ф', "F"}, {'Х', "X"}, {'Ц', "Ts"}, {'Ч', "Ch"},
+        {'Ш', "Sh"}, {'Щ', "Sh"}, {'Ъ', ""}, {'Ы', "I"}, {'Ь', ""},
+        {'Э', "E"}, {'Ю', "Yu"}, {'Я', "Ya"},
+        {'Ў', "O‘"}, {'Қ', "Q"}, {'Ғ', "G‘"}, {'Ҳ', "H"}
     };
 
     public static string ToLatin(string text)
     {
-        var result = new System.Text.StringBuilder(text.Length * 2);
-        int i = 0;
-        while (i < text.Length)
+        if (string.IsNullOrEmpty(text)) return text;
+
+        var result = new StringBuilder(text.Length * 2);
+
+        foreach (char c in text)
         {
-            // 2 harfli kombinatsiyani tekshir
-            if (i + 1 < text.Length)
-            {
-                var two = text.Substring(i, 2);
-                if (Map.TryGetValue(two, out var twoResult))
-                {
-                    result.Append(twoResult);
-                    i += 2;
-                    continue;
-                }
-            }
-
-            // 1 harfli
-            var one = text[i].ToString();
-            if (Map.TryGetValue(one, out var oneResult))
-                result.Append(oneResult);
+            if (Map.TryGetValue(c, out string? latin))
+                result.Append(latin);
             else
-                result.Append(text[i]); // o'zgarmagan (raqam, tinish belgi)
-
-            i++;
+                result.Append(c); // tinish belgilari, raqamlar, bo'shliqlar
         }
+
         return result.ToString();
     }
 
-    /// O'zbek kiril harflari bormi?
     public static bool HasUzbekCyrillic(string text)
     {
         return text.Any(c => "ўқғҳЎҚҒҲ".Contains(c));
     }
 
-    /// Oddiy kiril harflari bormi?
     public static bool HasCyrillic(string text)
     {
-        return text.Any(c => c >= 'а' && c <= 'я' || c >= 'А' && c <= 'Я');
+        return text.Any(c => c >= 'а' && c <= 'я' || c >= 'А' && c <= 'Я' || c == 'ё' || c == 'Ё');
     }
 }
